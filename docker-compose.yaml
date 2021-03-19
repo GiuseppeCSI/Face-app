@@ -1,7 +1,6 @@
 version: "3.7"
 
 services:
-  
   face_app:
     image: micadoproject/quasar:1.1.2-cypress
     stdin_open: true
@@ -15,7 +14,7 @@ services:
       - "8080:8080"
     command: /bin/sh -c "npm install && quasar dev -m pwa"
     networks:
-      - micado_net
+      - face_net
 
   face_app_db:
     image: groonga/pgroonga:2.2.6-alpine-11-slim
@@ -32,7 +31,7 @@ services:
         source: postgres_init
         target: /docker-entrypoint-initdb.d
     networks:
-      - micado_net
+      - face_net
 
   data_api:
     image: postgrest/postgrest:v6.0.2
@@ -46,6 +45,8 @@ services:
       - face_app_db
     ports:
       - "3000:3000"
+    networks:
+      - face_net
 
   db_admin:
     image: dpage/pgadmin4:4.18
@@ -58,7 +59,9 @@ services:
       - "82:80"
     depends_on:
       - face_app_db
-    
+    networks:
+      - face_net
+
 volumes:
   face_app:
     driver: local
@@ -85,6 +88,5 @@ volumes:
       o: bind
 
 networks:
-  micado_net:
+  face_net:
     #    driver: bridge
-    external: true
