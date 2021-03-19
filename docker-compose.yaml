@@ -38,11 +38,8 @@ services:
     env_file:
       - prod.env
     environment:
-      PGRST_DB_URI: postgres://${MICADO_DB_PWD}:${MICADO_DB_USER}@micado_db:5432/${POSTGRES_DB}
-      PGRST_DB_SCHEMA: ${MICADO_DB_SCHEMA}
+      PGRST_DB_URI: postgres://${MICADO_DB_PWD}:${MICADO_DB_USER}@face_app_db:5432/${POSTGRES_DB}
       PGRST_DB_ANON_ROLE: ${MICADO_DB_USER} #In production this role should not be the same as the one used for the connection
-    depends_on:
-      - face_app_db
     ports:
       - "3000:3000"
     networks:

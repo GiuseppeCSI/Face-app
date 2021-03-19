@@ -48,6 +48,7 @@ export default {
       recordRTC: null,
       video: null,
       recordedBlob: null,
+      base64data: null,
       videoModel: ""
     }
   },
@@ -77,7 +78,12 @@ export default {
       this.video.src = audioVideoWebMURL;
       //this.toggleControls();
       this.recordedBlob = this.recordRTC.getBlob();
-      console.log(this.recordedBlob)
+      var reader = new FileReader();
+      reader.readAsDataURL(this.recordedBlob);
+      reader.onloadend = () => {
+        this.base64data = reader.result;
+        console.log(this.base64data);
+      }
       var file = new File([this.recordRTC.getBlob()], "test.webm", {
         type: 'video/webm\;codecs=vp9'
       });
@@ -106,11 +112,15 @@ export default {
       let stream = this.stream;
       stream.getAudioTracks().forEach(track => track.stop());
       stream.getVideoTracks().forEach(track => track.stop());
-
     },
     download (video = "video") {
+      console.log(this.base64data)
+      this.$axios.post('http://localhost:3000/consent', {
+        video: this.base64data
+      });
+      console.log(this.recordedBlob)
       console.log(this.recordRTC)
-      this.recordRTC.save('video.webm');
+      //    this.recordRTC.save('video.webm');
     }
   },
   computed: {
