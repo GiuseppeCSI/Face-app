@@ -37,6 +37,8 @@
 
 <script>
 let RecordRTC = require('recordrtc');
+var CryptoJS = require("crypto-js");
+
 
 export default {
   name: 'PageIndex',
@@ -115,13 +117,31 @@ export default {
     },
     download (video = "video") {
       console.log(this.base64data)
+      var encrypted_data = this.encrypt(this.base64data).toString(CryptoJS.enc.Hex)
+      console.log("I AM ENCRYPTED DATA")
+      console.log(encrypted_data)
       this.$axios.post('http://localhost:3000/consent', {
-        video: this.base64data
+        video: encrypted_data
       });
       console.log(this.recordedBlob)
       console.log(this.recordRTC)
       //    this.recordRTC.save('video.webm');
-    }
+    },
+    encrypt (docPicture) {
+      console.log(CryptoJS)
+    /*const algorithm = 'aes-192-cbc';
+    const password = 'password';
+    // First, we'll generate the key. The key length is dependent on the algorithm.
+    const key = CryptoJS.scryptSync(password, 'salt', 24) 
+    const iv = Buffer.alloc(16, 0);
+    const cipher = CryptoJS.createCipheriv(algorithm, key, iv);
+    let encrypted = cipher.update(docPicture, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    console.log(encrypted);
+    docPicture=encrypted
+    return docPicture*/
+    return CryptoJS.SHA512(docPicture);
+  }
   },
   computed: {
   },
