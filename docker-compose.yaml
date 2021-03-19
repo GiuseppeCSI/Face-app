@@ -1,0 +1,76 @@
+version: "3.7"
+
+services:
+  
+  face_app:
+    image: micadoproject/quasar:1.1.2-cypress
+    stdin_open: true
+    tty: true
+    volumes:
+      - type: volume
+        source: migrants_app
+        target: /code
+    ports:
+      - "8000:8000"
+      - "8080:8080"
+    command: /bin/sh -c "npm install && quasar dev -m pwa"
+    networks:
+      - micado_net
+
+  face_app_db:
+    image: groonga/pgroonga:2.2.6-alpine-11-slim
+    env_file:
+      - .env
+      - prod.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - type: volume
+        source: postgres_data
+        target: /var/lib/postgresql/data
+      - type: volume
+        source: postgres_init
+        target: /docker-entrypoint-initdb.d
+    networks:
+      - micado_net
+
+  data_api:
+    image: postgrest/postgrest:v6.0.2
+    env_file:
+      - prod.env
+    environment:
+      PGRST_DB_URI: postgres://${MICADO_DB_PWD}:${MICADO_DB_USER}@micado_db:5432/${POSTGRES_DB}
+      PGRST_DB_SCHEMA: ${MICADO_DB_SCHEMA}
+      PGRST_DB_ANON_ROLE: ${MICADO_DB_USER} #In production this role should not be the same as the one used for the connection
+    depends_on:
+      - face_app_db
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+
+  db_admin:
+    image: dpage/pgadmin4:4.18
+    env_file:
+      - prod.env
+    environment:
+      PGADMIN_DEFAULT_EMAIL: micado@csi.it
+    #      PGADMIN_DEFAULT_PASSWORD: micadoadmin
+    ports:
+      - "82:80"
+    depends_on:
+      - face_app_db
+    
+volumes:
+  migrants_app:
+    driver: local
+    driver_opts:
+      type: none
+      # device is the path in the host that has to be absolute
+      device: $PWD/app
+      o: bind
+  data2:
+    driver: local
+
+networks:
+  micado_net:
+    #    driver: bridge
+    external: true
