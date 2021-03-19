@@ -8,7 +8,7 @@ services:
     tty: true
     volumes:
       - type: volume
-        source: migrants_app
+        source: face_app
         target: /code
     ports:
       - "8000:8000"
@@ -60,7 +60,7 @@ services:
       - face_app_db
     
 volumes:
-  migrants_app:
+  face_app:
     driver: local
     driver_opts:
       type: none
