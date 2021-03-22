@@ -1,6 +1,7 @@
 <template>
   <q-page class="flex flex-center">
-    <div class="videoRec text-xs-center">
+    <div class="videoRec text-xs-center row">
+      {{patient.cf}}
       <input
         type="hidden"
         ref="video_h"
@@ -10,10 +11,13 @@
       <video
         ref="video"
         class="video"
-        :poster="poster"
         controls
+        autoplay
+        playsinline
       ></video>
       <div class="video-controllers"></div>
+    </div>
+    <div class="row">
       <q-btn
         @click="startRecording('video1')"
         label="record"
@@ -30,8 +34,6 @@
       >
       </q-btn>
     </div>
-    </div>
-    </div>
   </q-page>
 </template>
 
@@ -43,7 +45,6 @@ var CryptoJS = require("crypto-js");
 export default {
   name: 'PageIndex',
   name: 'Video',
-  props: [''],
   data: function () {
     return {
       poster: "/static/video-camera.png",
@@ -51,11 +52,15 @@ export default {
       video: null,
       recordedBlob: null,
       base64data: null,
+      patient: {},
       videoModel: ""
     }
   },
   methods: {
     successCallback (stream) {
+      console.log(stream)
+      console.log("in successCallback")
+      console.log(this)
       var options = {
         mimeType: 'video/webm\;codecs=vp9', // or video/webm\;codecs=h264 or video/webm\;codecs=vp9
         audioBitsPerSecond: 128000,
@@ -64,11 +69,16 @@ export default {
         bitsPerSecond: 128000 // if this line is provided, skip above two
       };
       this.stream = stream;
+      this.video = this.$refs.video;
+
+
       this.recordRTC = RecordRTC(stream, options);
       this.recordRTC.startRecording();
-      this.video = this.$refs.video;
       this.video.src = window.URL.createObjectURL(stream);
-      //video.srcObject = stream
+      //     this.video.muted = true;
+      //     this.video.volume = 0;
+      //this.video.srcObject = stream
+      this.recordRTC.camera = stream
       //this.toggleControls();
     },
     errorCallback () {
@@ -91,7 +101,7 @@ export default {
       });
 
       //    invokeSaveAsDialog(file, file.name);
-      this.recordRTC.getDataURL(function (dataURL) { });
+      //     this.recordRTC.getDataURL(function (dataURL) { });
     },
     startRecording (video = "video") {
       this.poster = "";
@@ -112,8 +122,12 @@ export default {
       // this.recordRTC = this.recordRTC;
       this.recordRTC.stopRecording(this.processVideo.bind(this));
       let stream = this.stream;
+      //      this.video.src = window.URL.createObjectURL(this.recordRTC.getBlob());
+
       stream.getAudioTracks().forEach(track => track.stop());
       stream.getVideoTracks().forEach(track => track.stop());
+      //      this.recordRTC.camera.stop();
+
     },
     download (video = "video") {
       console.log(this.base64data)
@@ -129,19 +143,19 @@ export default {
     },
     encrypt (docPicture) {
       console.log(CryptoJS)
-    /*const algorithm = 'aes-192-cbc';
-    const password = 'password';
-    // First, we'll generate the key. The key length is dependent on the algorithm.
-    const key = CryptoJS.scryptSync(password, 'salt', 24) 
-    const iv = Buffer.alloc(16, 0);
-    const cipher = CryptoJS.createCipheriv(algorithm, key, iv);
-    let encrypted = cipher.update(docPicture, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    console.log(encrypted);
-    docPicture=encrypted
-    return docPicture*/
-    return CryptoJS.SHA512(docPicture);
-  }
+      /*const algorithm = 'aes-192-cbc';
+      const password = 'password';
+      // First, we'll generate the key. The key length is dependent on the algorithm.
+      const key = CryptoJS.scryptSync(password, 'salt', 24) 
+      const iv = Buffer.alloc(16, 0);
+      const cipher = CryptoJS.createCipheriv(algorithm, key, iv);
+      let encrypted = cipher.update(docPicture, 'utf8', 'hex');
+      encrypted += cipher.final('hex');
+      console.log(encrypted);
+      docPicture=encrypted
+      return docPicture*/
+      return CryptoJS.SHA512(docPicture);
+    }
   },
   computed: {
   },
@@ -150,9 +164,14 @@ export default {
     this.video.muted = false;
     this.video.controls = true;
     this.video.autoplay = false;
+    console.log("the props mounted")
+    console.log(this.$route.query.patient)
+    this.patient = JSON.parse(this.$route.query.patient)
+    console.log(this.patient)
   },
   created: function () {
-
+    console.log("the props")
+    console.log(this.$route.query.patient.cf)
   }
 }
 </script>

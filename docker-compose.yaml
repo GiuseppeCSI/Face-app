@@ -12,7 +12,7 @@ services:
     ports:
       - "8000:8000"
       - "8080:8080"
-    command: /bin/sh -c "npm install && quasar dev -m pwa"
+    command: /bin/sh -c "npm install && quasar dev"
     networks:
       - face_net
 
