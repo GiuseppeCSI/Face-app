@@ -1,38 +1,52 @@
 <template>
-  <q-page class="flex flex-center">
-    <div class="videoRec text-xs-center row">
-      {{patient.cf}}
-      <input
-        type="hidden"
-        ref="video_h"
-        name="video"
-        v-model="videoModel"
-      />
-      <video
-        ref="video"
-        class="video"
-        controls
-        autoplay
-        playsinline
-      ></video>
-      <div class="video-controllers"></div>
+  <q-page class="">
+    <div class="row justify-center">
+      <div class="column q-gutter-md">
+        Nome: {{ patient.nome }}<br />
+        Codice Fiscale: {{patient.cf}}
+      </div>
     </div>
-    <div class="row">
-      <q-btn
-        @click="startRecording('video1')"
-        label="record"
-      >
-      </q-btn>
-      <q-btn
-        @click="stopRecording('video1')"
-        label="stop"
-      >
-      </q-btn>
-      <q-btn
-        @click="download('video1')"
-        label="download"
-      >
-      </q-btn>
+    <div class="row justify-center">
+      <div class="videoRec text-xs-center  column q-gutter-md">
+        <input
+          type="hidden"
+          ref="video_h"
+          name="video"
+          v-model="videoModel"
+        />
+        <video
+          ref="video"
+          class="video"
+          controls
+          autoplay
+          playsinline
+        ></video>
+        <div class="video-controllers"></div>
+      </div>
+    </div>
+    <div class="row justify-center">
+      <div class="column">
+        <q-btn
+          @click="startRecording('video1')"
+          label="record"
+        >
+        </q-btn>
+      </div>
+      <div class="column">
+
+        <q-btn
+          @click="stopRecording('video1')"
+          label="stop"
+        >
+        </q-btn>
+      </div>
+      <div class="column">
+        <q-btn
+          @click="download('video1')"
+          label="download"
+        >
+        </q-btn>
+      </div>
     </div>
   </q-page>
 </template>
