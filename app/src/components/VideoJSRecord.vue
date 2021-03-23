@@ -79,6 +79,7 @@ export default {
       }
     };
   },
+  props: ['oldvideo'],
   mounted () {
     /* eslint-disable no-console */
     this.player = videojs('#myVideo', this.options, () => {
@@ -115,6 +116,10 @@ export default {
     this.player.on('deviceError', () => {
       console.error('device error:', this.player.deviceErrorCode);
     });
+
+    if (this.oldvideo) {
+      this.player.recordedData = this.oldvideo
+    }
   },
   beforeDestroy () {
     if (this.player) {

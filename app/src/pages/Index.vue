@@ -38,7 +38,7 @@ import VideoJSRecord from '../components/VideoJSRecord.vue'
 
 export default {
   name: 'PageIndex',
-  name: 'Video', components: {
+  components: {
     VideoJSRecord
   },
   data: function () {

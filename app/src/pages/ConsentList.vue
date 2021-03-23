@@ -22,15 +22,41 @@
         </div>
       </template>
     </vuetable>
+    <q-dialog v-model="alert">
+      <q-card>
+        <q-card-section>
+          <div class="text-h6">Alert</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          <video></video>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn
+            flat
+            label="OK"
+            color="primary"
+            v-close-popup
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
 <script>
 import Vuetable from 'vuetable-2'
+import VideoJSRecord from '../components/VideoJSRecord.vue'
+
+var URL = window.URL || window.webkitURL;
+var video = document.getElementsByTagName('video')[0];
+
 export default {
   // name: 'PageName',
   components: {
-    Vuetable
+    Vuetable, VideoJSRecord
   },
   methods: {
     transformData (data) {
@@ -62,8 +88,17 @@ export default {
       */
       return data
     },
-    editRow (rowData) {
-      alert("You clicked edit on" + JSON.stringify(rowData))
+    async editRow (rowData) {
+      //alert("You clicked edit on" + JSON.stringify(rowData))
+      this.alert = true
+      this.currentData = rowData
+      const base64Response = await fetch(rowData.video);
+      const blob = await base64Response.blob();
+      this.currentVideo = blob
+      var URL = window.URL || window.webkitURL;
+      var video = document.getElementsByTagName('video')[0];
+      video.src = URL.createObjectURL(new Blob([blob]));
+      video.play()
     },
     makeQueryParams (sortOrder, currentPage, perPage) {
       return {}
@@ -71,6 +106,9 @@ export default {
   },
   data () {
     return {
+      alert: false,
+      currentData: null,
+      currentVideo: null,
       fields: [
         {
           name: "id",
