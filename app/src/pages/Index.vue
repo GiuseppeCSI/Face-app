@@ -13,45 +13,15 @@
         </div>
       </div>
     </div>
-    <VideoJSRecord v-on:recordeddata="manageRecording" />
     <div class="row justify-center">
-      <div class="videoRec text-xs-center  column q-gutter-md">
-        <input
-          type="hidden"
-          ref="video_h"
-          name="video"
-          v-model="videoModel"
-        />
-        <video
-          ref="video"
-          class="video"
-          controls
-          autoplay
-          playsinline
-        ></video>
-        <div class="video-controllers"></div>
-      </div>
+      <VideoJSRecord v-on:recordeddata="manageRecording" />
     </div>
     <div class="row justify-center">
-      <div class="column">
-        <q-btn
-          @click="startRecording('video1')"
-          label="record"
-        >
-        </q-btn>
-      </div>
-      <div class="column">
 
-        <q-btn
-          @click="stopRecording('video1')"
-          label="stop"
-        >
-        </q-btn>
-      </div>
       <div class="column">
         <q-btn
           @click="download('video1')"
-          label="download"
+          label="Upload"
         >
         </q-btn>
       </div>
@@ -105,6 +75,7 @@ export default {
         console.log(this.base64data);
       }
     },
+    /*
     successCallback (stream) {
       console.log(stream)
       console.log("in successCallback")
@@ -177,6 +148,7 @@ export default {
       //      this.recordRTC.camera.stop();
 
     },
+    */
     download (video = "video") {
       console.log(this.base64data)
       var encrypted_data = this.encrypt(this.base64data).toString(CryptoJS.enc.Hex)
@@ -208,10 +180,12 @@ export default {
   computed: {
   },
   mounted: function () {
+    /*
     this.video = this.$refs.video;
     this.video.muted = false;
     this.video.controls = true;
     this.video.autoplay = false;
+    */
     console.log("the props mounted")
     console.log(this.$route.query.patient)
     this.patient = JSON.parse(this.$route.query.patient)
