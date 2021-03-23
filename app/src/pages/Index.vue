@@ -16,12 +16,23 @@
     <div class="row justify-center">
       <VideoJSRecord v-on:recordeddata="manageRecording" />
     </div>
-    <div class="row justify-center">
+    <div class="row justify-center q-gutter-md">
 
-      <div class="column">
+      <div class="column q-gutter-md">
         <q-btn
           @click="download('video1')"
+          color="primary"
+          glossy
           label="Upload"
+        >
+        </q-btn>
+      </div>
+      <div class="column q-gutter-md">
+        <q-btn
+          @click="makePdf('video1')"
+          color="primary"
+          glossy
+          label="Generate PDF"
         >
         </q-btn>
       </div>
@@ -59,6 +70,7 @@ export default {
       video: null,
       recordedBlob: null,
       base64data: null,
+      pdf: null,
       survey: model,
       patient: {},
       videoModel: ""
@@ -74,6 +86,51 @@ export default {
         this.base64data = reader.result;
         console.log(this.base64data);
       }
+    },
+    makePdf () {
+      var pdfMake = require('pdfmake/build/pdfmake.js')
+      if (pdfMake.vfs == undefined) {
+        var pdfFonts = require('pdfmake/build/vfs_fonts.js')
+        pdfMake.vfs = pdfFonts.pdfMake.vfs;
+      }
+      console.log(this.survey)
+      console.log(this.survey.data)
+      var docDefinition = {
+        content: [
+          { text: 'Scheda anamnestica', style: 'header' },
+          'Nome: ' + this.survey.data.nome || '' + 'Cognome: ' + this.survey.data.cognome || '',
+          'Indirizzo: ' + this.survey.data.indirizzo || '',
+          {
+            style: 'tableExample',
+            table: {
+              body: [
+                ['Anamnesi', 'Risposta'],
+                ['Attualmente è malato?', this.survey.data.anamnesi.malato || ''],
+                ['Ha febbre?', this.survey.data.anamnesi.febbre || ''],
+                ['Ha avuto reazioni gravi dopo un vaccino?', this.survey.data.anamnesi.reazione || ''],
+                ['soffre di malattie cardiache o polmonari, asma, malattie renali, diabete, anemie o altre malattie del sangue?', this.survey.data.anamnesi.malattie || ''],
+                ['si trova in una condizione di compromissione del sistema immunitario? Ad esempio: cancro, leucemia, linfoma, HIV/AIDS, trapianto…', this.survey.data.anamnesi.immunitario || ''],
+                ['soffre di allergie? (ad es. lattice, cibi, farmaci, componenti del vaccino?) se sì specificare', this.survey.data.anamnesi.allergie || '']
+
+              ]
+            }
+          },
+          'Dettaglio allergie:' + this.survey.data.allergie_dettaglio || '',
+          {
+            image: this.survey.data.firma || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
+            width: 200
+          }
+        ]
+      }
+      //     pdfMake.createPdf(docDefinition).download('optionalName.pdf')
+      let pdfDocGenerator = pdfMake.createPdf(docDefinition);
+      pdfDocGenerator.getBase64((data) => {
+        console.log("getBase64")
+        console.log(data)
+        this.pdf = data
+        //    alert(this.pdf);
+      }).download('optionalName.pdf')
+      // pdfDocGenerator.download('optionalName.pdf')
     },
     /*
     successCallback (stream) {
@@ -157,6 +214,7 @@ export default {
       this.$axios.post('http://localhost:3000/consent', {
         videohash: encrypted_data,
         video: this.base64data,
+        pdf: this.pdf,
         codicefiscale: "GPPLCU69E10L219M"
       });
       console.log(this.recordedBlob)

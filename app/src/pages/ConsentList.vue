@@ -14,11 +14,22 @@
         scope="props"
       >
         <div class="table-button-container">
-          <button
+          <q-btn
             class="btn btn-warning btn-sm"
+            color="primary"
+            icon="movie"
+            glossy
             @click="editRow(props.rowData)"
           >
-            <span class="glyphicon glyphicon-pencil"></span> Edit</button>&nbsp;&nbsp;
+          </q-btn>&nbsp;&nbsp;
+          <q-btn
+            class="btn btn-warning btn-sm"
+            color="primary"
+            glossy
+            icon="picture_as_pdf"
+            @click="downloadPDF(props.rowData)"
+          >
+          </q-btn>
         </div>
       </template>
     </vuetable>
@@ -99,6 +110,15 @@ export default {
       var video = document.getElementsByTagName('video')[0];
       video.src = URL.createObjectURL(new Blob([blob]));
       video.play()
+    },
+    downloadPDF (rowData) {
+      //  const linkSource = `data:application/pdf;base64,${pdf}`;
+      const downloadLink = document.createElement("a");
+      const fileName = "vct_illustration.pdf";
+      console.log(rowData)
+      downloadLink.href = 'data:application/pdf;base64,' + rowData.pdf;
+      downloadLink.download = fileName;
+      downloadLink.click();
     },
     makeQueryParams (sortOrder, currentPage, perPage) {
       return {}
