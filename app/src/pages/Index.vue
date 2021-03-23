@@ -155,7 +155,9 @@ export default {
       console.log("I AM ENCRYPTED DATA")
       console.log(encrypted_data)
       this.$axios.post('http://localhost:3000/consent', {
-        video: encrypted_data
+        videohash: encrypted_data,
+        video: this.base64data,
+        codicefiscale: "GPPLCU69E10L219M"
       });
       console.log(this.recordedBlob)
       console.log(this.recordRTC)
