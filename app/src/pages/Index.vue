@@ -1,11 +1,19 @@
 <template>
   <q-page class="">
-    <div class="row justify-center">
+    <div class="row justify-center q-gutter-md">
       <div class="column q-gutter-md">
         Nome: {{ patient.nome }}<br />
         Codice Fiscale: {{patient.cf}}
       </div>
     </div>
+    <div class="row justify-center">
+      <div class="column q-gutter-md">
+        <div id="surveyContainer">
+          <survey :survey="survey"></survey>
+        </div>
+      </div>
+    </div>
+    <VideoJSRecord v-on:recordeddata="manageRecording" />
     <div class="row justify-center">
       <div class="videoRec text-xs-center  column q-gutter-md">
         <input
@@ -54,23 +62,49 @@
 <script>
 let RecordRTC = require('recordrtc');
 var CryptoJS = require("crypto-js");
-
+import * as SurveyVue from 'survey-vue'
+import "survey-vue/survey.css";
+import VideoJSRecord from '../components/VideoJSRecord.vue'
 
 export default {
   name: 'PageIndex',
-  name: 'Video',
+  name: 'Video', components: {
+    VideoJSRecord
+  },
   data: function () {
+    var surveyJSON = { "locale": "it", "title": "Scheda anamnestica", "pages": [{ "name": "page1", "elements": [{ "type": "text", "name": "nome", "title": "Nome" }, { "type": "text", "name": "cognome", "title": "Cognome" }, { "type": "text", "name": "indirizzo", "title": "Indirizzo" }, { "type": "matrix", "name": "anamnesi", "columns": [{ "value": "si", "text": "Sì" }, { "value": "no", "text": "No" }, { "value": "non_so", "text": "Non so" }], "rows": [{ "value": "malato", "text": "Attualmente è malato?" }, { "value": "febbre", "text": "Ha febbre?" }, { "value": "reazione", "text": "Ha avuto reazioni gravi dopo un vaccino?" }, { "value": "malattie", "text": "soffre di malattie cardiache o polmonari, asma, malattie renali, diabete, anemie o altre malattie del sangue?" }, { "value": "immunitario", "text": "si trova in una condizione di compromissione del sistema immunitario? Ad esempio: cancro, leucemia, linfoma, HIV/AIDS, trapianto…" }, { "value": "allergie", "text": "soffre di allergie? (ad es. lattice, cibi, farmaci, componenti del vaccino?) se sì specificare" }] }, { "type": "text", "name": "allergie_dettaglio", "title": "Elenco allergie" }, { "type": "signaturepad", "name": "firma", "title": { "it": "Firma" } }] }] }
+    var model = new SurveyVue.Model(surveyJSON)
+    console.log("SURVEY")
+    console.log(model)
+    model
+      .onComplete
+      .add(function (result) {
+        console.log("result of SURVEY")
+        console.log(result)
+        console.log(result.data)
+      });
     return {
       poster: "/static/video-camera.png",
       recordRTC: null,
       video: null,
       recordedBlob: null,
       base64data: null,
+      survey: model,
       patient: {},
       videoModel: ""
     }
   },
   methods: {
+    manageRecording (blob) {
+      console.log("received manageRecording")
+      console.log(blob)
+      var reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = () => {
+        this.base64data = reader.result;
+        console.log(this.base64data);
+      }
+    },
     successCallback (stream) {
       console.log(stream)
       console.log("in successCallback")
