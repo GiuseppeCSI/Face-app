@@ -11,11 +11,58 @@
 
     <link rel="stylesheet" href="css/styles.css?v=1.0">
 
+
 </head>
 
 <body>
-    <input type="button" onclick='location.href="/?patient={\"nome\"%3A\"Gioppo\",\"cf\"%3A\"GPPLCU69E10L219M\"};"'
+    <input type="button"
+        onclick='location.href="/?patient=%7B%22nome%22%3A%22gioppo%22%2C%22cf%22%3A%22gpp%22%2C%20%22scheda%22%3A%20%7B%20%22nome%22%3A%20%22Luca%22%2C%20%22cognome%22%3A%20%22Gioppo%22%2C%20%22indirizzo%22%3A%20%22csi%22%2C%20%22anamnesi%22%3A%20%7B%22allergie%22%3A%20%22si%22%2C%20%22immunitario%22%3A%20%22non_so%22%7D%2C%20%22allergie_dettaglio%22%3A%20%22latte%22%7D%7D";'
         value="Go to Consent" />
+    <script>
+        /*
+        let windowName = 'w_' + Date.now() + Math.floor(Math.random() * 100000).toString();
+        var form = document.createElement("form");
+        form.setAttribute("method", "get");
+        form.setAttribute("action", "/");
+
+        form.setAttribute("target", windowName);
+
+        var hiddenField = document.createElement("input");
+        hiddenField.setAttribute("type", "hidden");
+        hiddenField.setAttribute("name", "message");
+        hiddenField.setAttribute("value", "val");
+        form.appendChild(hiddenField);
+        document.body.appendChild(form);
+
+        window.open('http://158.102.29.31:8080', windowName);
+
+        form.submit();
+        */
+
+        let _data = { "patientdata": { "nome": "test", "cognome": "gioppo" } }
+
+        fetch('http://localhost:3000/patientdata?select=id', {
+            method: "POST",
+            body: JSON.stringify(_data),
+            headers: { "Content-type": "application/json; charset=UTF-8", "Prefer": "return=representation" }
+        })
+            .then(response => response.json())
+            .then(json => {
+                console.log(json)
+                console.log(json[0].id)
+                window.open('http://158.102.29.31:8080/#' + json[0].id);
+            })
+            .catch(err => console.log(err));
+
+        var oReq = new XMLHttpRequest();
+        oReq.open("GET", "http://158.102.29.31:8080");
+        oReq.setRequestHeader('ExtraInfo', 28473432894789238473293874329);
+        oReq.send();
+        oReq.onload = function () {
+            window.open('http://158.102.29.31:8080');
+        }
+
+    </script>
 </body>
 
 </html>

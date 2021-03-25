@@ -17,6 +17,16 @@
       <VideoJSRecord v-on:recordeddata="manageRecording" />
     </div>
     <div class="row justify-center q-gutter-md">
+      <div class="column q-gutter-md">
+        <q-btn
+          @click="makePdf('video1')"
+          color="primary"
+          glossy
+          label="Generate PDF"
+          :disable="generatepdfbutton"
+        >
+        </q-btn>
+      </div>
 
       <div class="column q-gutter-md">
         <q-btn
@@ -24,19 +34,35 @@
           color="primary"
           glossy
           label="Upload"
-        >
-        </q-btn>
-      </div>
-      <div class="column q-gutter-md">
-        <q-btn
-          @click="makePdf('video1')"
-          color="primary"
-          glossy
-          label="Generate PDF"
+          :disable="uploadbutton"
         >
         </q-btn>
       </div>
     </div>
+    <q-dialog v-model="pindialog">
+      <q-card>
+        <q-card-section>
+          <div class="text-h6">Alert</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          <q-input
+            standout="bg-teal text-white"
+            v-model="pin"
+            label="Inserire il PIN"
+          />
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn
+            flat
+            label="Send"
+            color="primary"
+            @click="sendtosign()"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -46,6 +72,7 @@ var CryptoJS = require("crypto-js");
 import * as SurveyVue from 'survey-vue'
 import "survey-vue/survey.css";
 import VideoJSRecord from '../components/VideoJSRecord.vue'
+import * as QRious from 'qrious'
 
 export default {
   name: 'PageIndex',
@@ -67,7 +94,12 @@ export default {
     return {
       poster: "/static/video-camera.png",
       recordRTC: null,
+      pindialog: false,
       video: null,
+      pin: "",
+      videohash: "",
+      generatepdfbutton: true,
+      uploadbutton: true,
       recordedBlob: null,
       base64data: null,
       pdf: null,
@@ -86,6 +118,14 @@ export default {
         this.base64data = reader.result;
         console.log(this.base64data);
       }
+      // recorded the video so we can cache it and hash it (will also have to crypt it but for now we make it easy and not do it)
+      this.videohash = this.encrypt(this.base64data).toString(CryptoJS.enc.Hex)
+      this.generatepdfbutton = false
+    },
+    sendtosign () {
+      console.log("sending to sign")
+      this.uploadbutton = false
+
     },
     makePdf () {
       var pdfMake = require('pdfmake/build/pdfmake.js')
@@ -95,6 +135,18 @@ export default {
       }
       console.log(this.survey)
       console.log(this.survey.data)
+      var qr = new QRious({
+        background: 'white',
+        backgroundAlpha: 0.8,
+        foreground: 'black',
+        foregroundAlpha: 0.8,
+        level: 'H',
+        padding: 25,
+        size: 300,
+        value: this.videohash
+      });
+      console.log("the qrcode")
+      console.log(qr.toDataURL())
       var docDefinition = {
         content: [
           { text: 'Scheda anamnestica', style: 'header' },
@@ -116,9 +168,15 @@ export default {
             }
           },
           'Dettaglio allergie:' + this.survey.data.allergie_dettaglio || '',
+          'Firma',
           {
             image: this.survey.data.firma || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
             width: 200
+          },
+          'Hash della registrazione',
+          {
+            image: qr.toDataURL(),
+            width: 300
           }
         ]
       }
@@ -129,83 +187,11 @@ export default {
         console.log(data)
         this.pdf = data
         //    alert(this.pdf);
-      }).download('optionalName.pdf')
+      })
+      this.pindialog = true
+      //pdfDocGenerator.download('optionalName.pdf')
       // pdfDocGenerator.download('optionalName.pdf')
     },
-    /*
-    successCallback (stream) {
-      console.log(stream)
-      console.log("in successCallback")
-      console.log(this)
-      var options = {
-        mimeType: 'video/webm\;codecs=vp9', // or video/webm\;codecs=h264 or video/webm\;codecs=vp9
-        audioBitsPerSecond: 128000,
-        videoBitsPerSecond: 128000,
-        timeSlice: 2000,
-        bitsPerSecond: 128000 // if this line is provided, skip above two
-      };
-      this.stream = stream;
-      this.video = this.$refs.video;
-
-
-      this.recordRTC = RecordRTC(stream, options);
-      this.recordRTC.startRecording();
-      this.video.src = window.URL.createObjectURL(stream);
-      //     this.video.muted = true;
-      //     this.video.volume = 0;
-      //this.video.srcObject = stream
-      this.recordRTC.camera = stream
-      //this.toggleControls();
-    },
-    errorCallback () {
-      //handle error here
-    },
-    processVideo (audioVideoWebMURL) {
-      //let video = this.$refs.video;
-      //     let recordRTC = this.recordRTC;
-      this.video.src = audioVideoWebMURL;
-      //this.toggleControls();
-      this.recordedBlob = this.recordRTC.getBlob();
-      var reader = new FileReader();
-      reader.readAsDataURL(this.recordedBlob);
-      reader.onloadend = () => {
-        this.base64data = reader.result;
-        console.log(this.base64data);
-      }
-      var file = new File([this.recordRTC.getBlob()], "test.webm", {
-        type: 'video/webm\;codecs=vp9'
-      });
-
-      //    invokeSaveAsDialog(file, file.name);
-      //     this.recordRTC.getDataURL(function (dataURL) { });
-    },
-    startRecording (video = "video") {
-      this.poster = "";
-      let mediaConstraints = {
-        video: {
-          mandatory: {
-            minWidth: 700,
-            minHeight: 720
-          }
-        }, audio: true
-      };
-      navigator.mediaDevices
-        .getUserMedia(mediaConstraints)
-        .then(this.successCallback.bind(this), this.errorCallback.bind(this));
-    },
-    stopRecording (video = "video") {
-      this.poster = "";
-      // this.recordRTC = this.recordRTC;
-      this.recordRTC.stopRecording(this.processVideo.bind(this));
-      let stream = this.stream;
-      //      this.video.src = window.URL.createObjectURL(this.recordRTC.getBlob());
-
-      stream.getAudioTracks().forEach(track => track.stop());
-      stream.getVideoTracks().forEach(track => track.stop());
-      //      this.recordRTC.camera.stop();
-
-    },
-    */
     download (video = "video") {
       console.log(this.base64data)
       var encrypted_data = this.encrypt(this.base64data).toString(CryptoJS.enc.Hex)
@@ -240,16 +226,27 @@ export default {
   computed: {
   },
   mounted: function () {
-    /*
-    this.video = this.$refs.video;
-    this.video.muted = false;
-    this.video.controls = true;
-    this.video.autoplay = false;
-    */
     console.log("the props mounted")
     console.log(this.$route.query.patient)
+    console.log(this.$route.hash)
+    this.$axios.get("http://localhost:3000/patientdata?id=eq." + this.$route.hash.substring(1))
+      .then(function (response) {
+        // handle success
+        console.log(response);
+        console.log(response.data[0].patientdata)
+        console.log(JSON.parse(response.data[0].patientdata))
+      })
+      .catch(function (error) {
+        // handle error
+        console.log(error);
+      })
+      .then(function () {
+        // always executed
+      });
     this.patient = JSON.parse(this.$route.query.patient)
     console.log(this.patient)
+    this.survey.data = this.patient.scheda
+
   },
   created: function () {
     console.log("the props")

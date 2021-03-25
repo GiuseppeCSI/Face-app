@@ -2,7 +2,7 @@
   <q-page padding>
     <vuetable
       ref="vuetable"
-      api-url="http://localhost:3000/consent"
+      api-url="http://192.168.1.134:3000/consent"
       :fields="fields"
       data-path=""
       pagination-path=""

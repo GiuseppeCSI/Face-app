@@ -78,7 +78,21 @@ module.exports = function (/* ctx */) {
     devServer: {
       https: false,
       port: 8080,
+      /*
+      before: function (app) {
+        app.post('/', function (req, res) {
+          res.redirect('/');
+        });
+      },
+      */
+
+      headers: {
+        // 'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+        // 'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Origin': '*',
+      },
       open: true // opens browser window automatically
+
     },
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-framework
