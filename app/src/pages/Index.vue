@@ -38,7 +38,23 @@
         >
         </q-btn>
       </div>
+      <div class="column q-gutter-md">
+        <q-btn
+          @click="firma()"
+          color="primary"
+          glossy
+          label="Firma con PAD"
+        >
+        </q-btn>
+      </div>
     </div>
+    <canvas
+      id="myCanvas"
+      width="320"
+      height="210"
+      style="border:1px solid #d3d3d3;"
+    >
+      Your browser does not support the HTML5 canvas tag.</canvas>
     <q-dialog v-model="pindialog">
       <q-card>
         <q-card-section>
@@ -74,6 +90,13 @@ import "survey-vue/survey.css";
 import VideoJSRecord from '../components/VideoJSRecord.vue'
 import * as QRious from 'qrious'
 
+
+function onDetectRunning (vueref) {
+  console.log("Signature SDK Service detected")
+  clearTimeout(vueref.timeout);
+};
+
+
 export default {
   name: 'PageIndex',
   components: {
@@ -99,12 +122,19 @@ export default {
       pin: "",
       videohash: "",
       generatepdfbutton: true,
+      signDoctor: true,
       uploadbutton: true,
       recordedBlob: null,
       base64data: null,
+      signimage: null,
       pdf: null,
       survey: model,
       patient: {},
+      ctx: null,
+      dynCapt: null,
+      canvas: null,
+      wgssSignatureSDK: null,
+      timeout: null,
       videoModel: ""
     }
   },
@@ -120,7 +150,126 @@ export default {
       }
       // recorded the video so we can cache it and hash it (will also have to crypt it but for now we make it easy and not do it)
       this.videohash = this.encrypt(this.base64data).toString(CryptoJS.enc.Hex)
-      this.generatepdfbutton = false
+      //  this.generatepdfbutton = false
+      this.signDoctor = false
+    },
+    timedDetect () {
+      if (this.wgssSignatureSDK && this.wgssSignatureSDK.running) {
+        console.log("Signature SDK Service detected")
+      }
+      else {
+        console.log("Signature SDK Service not detected")
+      }
+    },
+
+    firma () {
+      if (this.wgssSignatureSDK.running) {
+        if (null == this.canvas) {
+          this.ctx = this.canvas.getContext("2d");
+          console.log("wgssSignatureSDK running and firma called")
+          console.log(this.ctx)
+        }
+        this.dynCapt = new this.wgssSignatureSDK.DynamicCapture((dynCaptV, status) => {
+          if (this.wgssSignatureSDK.ResponseStatus.OK == status) {
+            console.log("status OK and we are good to go")
+            this.sigCtl = new this.wgssSignatureSDK.SigCtl((sigCtlV, status) => {
+              if (this.wgssSignatureSDK.ResponseStatus.OK == status) {
+                console.log("before onSigCtlPutLicence")
+                sigCtlV.PutLicence(LICENCEKEY, (sigCtlV, status) => {
+                  if (this.wgssSignatureSDK.ResponseStatus.OK == status) {
+                    console.log("before capture")
+                    this.dynCapt.Capture(sigCtlV, "Nome e Cognime medico", "Consenso vaccino", null, null, (dynCaptV, sigObjV, status) => {
+                      if (this.wgssSignatureSDK.ResponseStatus.OK == status) {
+                        console.log("<br>Adding extra data")
+                        sigObjV.PutExtraData("luogo vaccinazione", "via Negarville 8", (sigObjV, status) => {
+                          if (this.wgssSignatureSDK.ResponseStatus.OK == status) {
+                            console.log("<br>Rendering bitmap")
+                            var flags = this.wgssSignatureSDK.RBFlags.RenderOutputPicture |
+                              this.wgssSignatureSDK.RBFlags.RenderColor24BPP;
+                            sigObjV.RenderBitmap("bmp", this.canvas.width, this.canvas.height, 0.7, 0x00000000, 0x00FFFFFF, flags, 0, 0, (sigObjV, bmpObj, status) => {
+                              if (this.wgssSignatureSDK.ResponseStatus.OK == status) {
+                                if (bmpObj.isBase64) {
+                                  console.log("<br>Base64 bitmap retrieved:<br>")
+                                  console.log("<br>" + bmpObj.image.src)
+                                }
+                                else {
+                                  console.log("<br>Bitmap retrieved, rendering image...")
+                                }
+                                console.log(this.ctx)
+                                this.ctx.drawImage(bmpObj.image, 0, 0);
+                                console.log("IMAGE")
+                                console.log(bmpObj)
+                                this.signimage = bmpObj
+                                sigObjV.GetAdditionalData(this.wgssSignatureSDK.CaptData.CaptMachineOS, (sigObjV, additionalData, status) => {
+                                  if (this.wgssSignatureSDK.ResponseStatus.OK == status) {
+                                    console.log("<br>Additional Data/MachineOS: " + additionalData)
+                                    sigObjV.GetSigText((sigObjV, data, status) => {
+                                      if (this.wgssSignatureSDK.ResponseStatus.OK == status) {
+                                        console.log("<br>SigText: " + data)
+                                        var vData = new this.wgssSignatureSDK.Variant();
+                                        vData.type = this.wgssSignatureSDK.VariantType.VARIANT_BASE64;
+                                        vData.base64 = data;
+                                        sigObjV.PutSigData(vData, (sigObjV, status) => {
+                                          if (this.wgssSignatureSDK.ResponseStatus.OK == status) {
+                                            console.log("<br>PutSigData called")
+                                            console.log(vData)
+                                            console.log(sigObjV)
+                                            this.generatepdfbutton = false
+                                          }
+                                          else {
+                                            console.log("<br>error on PutSigData: " + status)
+                                          }
+                                        });
+                                      }
+                                      else {
+                                        console.log("<br>error on GetSigData: " + status)
+                                      }
+                                    });
+                                  }
+                                  else {
+                                    console.log("<br>error on GetAdditionalData: " + status)
+                                  }
+                                });
+                              }
+                              else {
+                                console.log("<br>Signature Render Bitmap error: " + status)
+                              }
+                            });
+                            this.sigObj = sigObjV;
+                          }
+                          else {
+                            console.log("<br>Signature PutExtraData error: " + status)
+                          }
+                        });
+                      }
+                      else if (1 == status) {
+                        console.log("<br>Signature capture cancelled by the user")
+                      }
+                      else {
+                        console.log("<br>Signature capture error: " + status)
+                      }
+                    });
+                  }
+                  else {
+                    console.log("<br>SigCtl constructor error: " + status)
+                  }
+                });
+              }
+              else {
+                console.log("<br>SigCtl constructor error: " + status)
+              }
+            });
+          }
+          else {
+            console.log("<br>Dynamic Capture constructor error: " + status)
+            if (this.wgssSignatureSDK.ResponseStatus.INVALID_SESSION == status) {
+              console.log("have to restart the session")
+              //restartSession(captureSignature);
+            }
+          }
+        });
+      }
+
     },
     sendtosign () {
       console.log("sending to sign")
@@ -176,6 +325,11 @@ export default {
           'Hash della registrazione',
           {
             image: qr.toDataURL(),
+            width: 300
+          },
+          'Firma del medico',
+          {
+            image: this.signimage.imaage.src,
             width: 300
           }
         ]
@@ -243,10 +397,19 @@ export default {
       .then(function () {
         // always executed
       });
-    this.patient = JSON.parse(this.$route.query.patient)
+    //    this.patient = JSON.parse(this.$route.query.patient)
     console.log(this.patient)
-    this.survey.data = this.patient.scheda
-
+    //    this.survey.data = this.patient.scheda
+    // part for wacom
+    this.timeout = this.timedDetect()
+    this.wgssSignatureSDK = new WacomGSS_SignatureSDK(() => {
+      console.log("Signature SDK Service detected")
+      clearTimeout(this.timeout);
+    }, 8000)
+    console.log("x PAD")
+    console.log(this.wgssSignatureSDK)
+    this.canvas = document.getElementById("myCanvas");
+    this.ctx = this.canvas.getContext("2d");
   },
   created: function () {
     console.log("the props")
