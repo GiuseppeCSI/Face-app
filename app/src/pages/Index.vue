@@ -16,7 +16,26 @@
     <div class="row justify-center">
       <VideoJSRecord v-on:recordeddata="manageRecording" />
     </div>
+    <div class="row justify-center">
+      <canvas
+        id="myCanvas"
+        width="320"
+        height="210"
+        style="border:1px solid #d3d3d3;"
+      >
+        Your browser does not support the HTML5 canvas tag.</canvas>
+    </div>
     <div class="row justify-center q-gutter-md">
+      <div class="column q-gutter-md">
+        <q-btn
+          @click="firma()"
+          color="primary"
+          glossy
+          label="Firma con PAD"
+          :disable="signDoctor"
+        >
+        </q-btn>
+      </div>
       <div class="column q-gutter-md">
         <q-btn
           @click="makePdf('video1')"
@@ -38,23 +57,7 @@
         >
         </q-btn>
       </div>
-      <div class="column q-gutter-md">
-        <q-btn
-          @click="firma()"
-          color="primary"
-          glossy
-          label="Firma con PAD"
-        >
-        </q-btn>
-      </div>
     </div>
-    <canvas
-      id="myCanvas"
-      width="320"
-      height="210"
-      style="border:1px solid #d3d3d3;"
-    >
-      Your browser does not support the HTML5 canvas tag.</canvas>
     <q-dialog v-model="pindialog">
       <q-card>
         <q-card-section>
@@ -95,6 +98,7 @@ function onDetectRunning (vueref) {
   console.log("Signature SDK Service detected")
   clearTimeout(vueref.timeout);
 };
+//      hostaddress: "192.168.1.134",
 
 
 export default {
@@ -103,7 +107,8 @@ export default {
     VideoJSRecord
   },
   data: function () {
-    var surveyJSON = { "locale": "it", "title": "Scheda anamnestica", "pages": [{ "name": "page1", "elements": [{ "type": "text", "name": "nome", "title": "Nome" }, { "type": "text", "name": "cognome", "title": "Cognome" }, { "type": "text", "name": "indirizzo", "title": "Indirizzo" }, { "type": "matrix", "name": "anamnesi", "columns": [{ "value": "si", "text": "Sì" }, { "value": "no", "text": "No" }, { "value": "non_so", "text": "Non so" }], "rows": [{ "value": "malato", "text": "Attualmente è malato?" }, { "value": "febbre", "text": "Ha febbre?" }, { "value": "reazione", "text": "Ha avuto reazioni gravi dopo un vaccino?" }, { "value": "malattie", "text": "soffre di malattie cardiache o polmonari, asma, malattie renali, diabete, anemie o altre malattie del sangue?" }, { "value": "immunitario", "text": "si trova in una condizione di compromissione del sistema immunitario? Ad esempio: cancro, leucemia, linfoma, HIV/AIDS, trapianto…" }, { "value": "allergie", "text": "soffre di allergie? (ad es. lattice, cibi, farmaci, componenti del vaccino?) se sì specificare" }] }, { "type": "text", "name": "allergie_dettaglio", "title": "Elenco allergie" }, { "type": "signaturepad", "name": "firma", "title": { "it": "Firma" } }] }] }
+    //    var surveyJSON = { "locale": "it", "title": "Scheda anamnestica", "pages": [{ "name": "page1", "elements": [{ "type": "text", "name": "nome", "title": "Nome" }, { "type": "text", "name": "cognome", "title": "Cognome" }, { "type": "text", "name": "indirizzo", "title": "Indirizzo" }, { "type": "matrix", "name": "anamnesi", "columns": [{ "value": "si", "text": "Sì" }, { "value": "no", "text": "No" }, { "value": "non_so", "text": "Non so" }], "rows": [{ "value": "malato", "text": "Attualmente è malato?" }, { "value": "febbre", "text": "Ha febbre?" }, { "value": "reazione", "text": "Ha avuto reazioni gravi dopo un vaccino?" }, { "value": "malattie", "text": "soffre di malattie cardiache o polmonari, asma, malattie renali, diabete, anemie o altre malattie del sangue?" }, { "value": "immunitario", "text": "si trova in una condizione di compromissione del sistema immunitario? Ad esempio: cancro, leucemia, linfoma, HIV/AIDS, trapianto…" }, { "value": "allergie", "text": "soffre di allergie? (ad es. lattice, cibi, farmaci, componenti del vaccino?) se sì specificare" }] }, { "type": "text", "name": "allergie_dettaglio", "title": "Elenco allergie" }, { "type": "signaturepad", "name": "firma", "title": { "it": "Firma" } }] }] }
+    var surveyJSON = { "locale": "it", "title": "Scheda anamnestica", "pages": [{ "name": "page1", "elements": [{ "type": "text", "name": "nome", "title": "Nome" }, { "type": "text", "name": "cognome", "title": "Cognome" }, { "type": "text", "name": "indirizzo", "title": "Indirizzo" }, { "type": "matrix", "name": "anamnesi", "columns": [{ "value": "si", "text": "Sì" }, { "value": "no", "text": "No" }, { "value": "non_so", "text": "Non so" }], "rows": [{ "value": "malato", "text": "Attualmente è malato?" }, { "value": "febbre", "text": "Ha febbre?" }, { "value": "reazione", "text": "Ha avuto reazioni gravi dopo un vaccino?" }, { "value": "malattie", "text": "soffre di malattie cardiache o polmonari, asma, malattie renali, diabete, anemie o altre malattie del sangue?" }, { "value": "immunitario", "text": "si trova in una condizione di compromissione del sistema immunitario? Ad esempio: cancro, leucemia, linfoma, HIV/AIDS, trapianto…" }, { "value": "allergie", "text": "soffre di allergie? (ad es. lattice, cibi, farmaci, componenti del vaccino?) se sì specificare" }] }, { "type": "text", "name": "allergie_dettaglio", "title": "Elenco allergie" }] }] }
     var model = new SurveyVue.Model(surveyJSON)
     console.log("SURVEY")
     console.log(model)
@@ -120,10 +125,11 @@ export default {
       pindialog: false,
       video: null,
       pin: "",
+      hostaddress: "158.102.29.31",
       videohash: "",
       generatepdfbutton: true,
       signDoctor: true,
-      uploadbutton: true,
+      uploadbutton: false,
       recordedBlob: null,
       base64data: null,
       signimage: null,
@@ -146,12 +152,14 @@ export default {
       reader.readAsDataURL(blob);
       reader.onloadend = () => {
         this.base64data = reader.result;
+        this.base64data = this.base64data.replace(",opus", "");
         console.log(this.base64data);
+        // recorded the video so we can cache it and hash it (will also have to crypt it but for now we make it easy and not do it)
+        this.videohash = this.encrypt(this.base64data).toString(CryptoJS.enc.Hex)
+        //  this.generatepdfbutton = false
+        this.signDoctor = false
       }
-      // recorded the video so we can cache it and hash it (will also have to crypt it but for now we make it easy and not do it)
-      this.videohash = this.encrypt(this.base64data).toString(CryptoJS.enc.Hex)
-      //  this.generatepdfbutton = false
-      this.signDoctor = false
+
     },
     timedDetect () {
       if (this.wgssSignatureSDK && this.wgssSignatureSDK.running) {
@@ -186,7 +194,7 @@ export default {
                             console.log("<br>Rendering bitmap")
                             var flags = this.wgssSignatureSDK.RBFlags.RenderOutputPicture |
                               this.wgssSignatureSDK.RBFlags.RenderColor24BPP;
-                            sigObjV.RenderBitmap("bmp", this.canvas.width, this.canvas.height, 0.7, 0x00000000, 0x00FFFFFF, flags, 0, 0, (sigObjV, bmpObj, status) => {
+                            sigObjV.RenderBitmap("png", this.canvas.width, this.canvas.height, 0.7, 0x00000000, 0x00FFFFFF, flags, 0, 0, (sigObjV, bmpObj, status) => {
                               if (this.wgssSignatureSDK.ResponseStatus.OK == status) {
                                 if (bmpObj.isBase64) {
                                   console.log("<br>Base64 bitmap retrieved:<br>")
@@ -291,7 +299,7 @@ export default {
         foregroundAlpha: 0.8,
         level: 'H',
         padding: 25,
-        size: 300,
+        size: 250,
         value: this.videohash
       });
       console.log("the qrcode")
@@ -317,23 +325,26 @@ export default {
             }
           },
           'Dettaglio allergie:' + this.survey.data.allergie_dettaglio || '',
-          'Firma',
-          {
-            image: this.survey.data.firma || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
-            width: 200
-          },
           'Hash della registrazione',
           {
             image: qr.toDataURL(),
-            width: 300
+            width: 250
           },
           'Firma del medico',
           {
-            image: this.signimage.imaage.src,
+            image: this.signimage.image.src,
             width: 300
           }
         ]
       }
+      /*
+                'Firma',
+          {
+            image: this.survey.data.firma || "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAFhAJ/wlseKgAAAABJRU5ErkJggg==",
+            width: 200
+          },
+
+*/
       //     pdfMake.createPdf(docDefinition).download('optionalName.pdf')
       let pdfDocGenerator = pdfMake.createPdf(docDefinition);
       pdfDocGenerator.getBase64((data) => {
@@ -342,7 +353,9 @@ export default {
         this.pdf = data
         //    alert(this.pdf);
       })
-      this.pindialog = true
+      //this.pindialog = true
+      this.uploadbutton = false
+
       //pdfDocGenerator.download('optionalName.pdf')
       // pdfDocGenerator.download('optionalName.pdf')
     },
@@ -351,7 +364,7 @@ export default {
       var encrypted_data = this.encrypt(this.base64data).toString(CryptoJS.enc.Hex)
       console.log("I AM ENCRYPTED DATA")
       console.log(encrypted_data)
-      this.$axios.post('http://localhost:3000/consent', {
+      this.$axios.post('http://' + this.hostaddress + ':3000/consent', {
         videohash: encrypted_data,
         video: this.base64data,
         pdf: this.pdf,
@@ -383,12 +396,14 @@ export default {
     console.log("the props mounted")
     console.log(this.$route.query.patient)
     console.log(this.$route.hash)
-    this.$axios.get("http://localhost:3000/patientdata?id=eq." + this.$route.hash.substring(1))
-      .then(function (response) {
+    this.$axios.get("http://" + this.hostaddress + ":3000/patientdata?id=eq." + this.$route.hash.substring(1))
+      .then((response) => {
         // handle success
         console.log(response);
         console.log(response.data[0].patientdata)
         console.log(JSON.parse(response.data[0].patientdata))
+
+        this.survey.data = JSON.parse(response.data[0].patientdata).scheda
       })
       .catch(function (error) {
         // handle error

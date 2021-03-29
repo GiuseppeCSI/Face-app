@@ -73,6 +73,7 @@ export default {
           record: {
             audio: true,
             video: true,
+            videoMimeType: 'video/webm; codecs=vp9',
             debug: true
           }
         }
@@ -118,7 +119,16 @@ export default {
     });
 
     if (this.oldvideo) {
-      this.player.recordedData = this.oldvideo
+      console.log("there is an oldvideo")
+      console.log(this.oldvideo)
+      //      var URL = window.URL || window.webkitURL;
+      //      var video = document.getElementsByTagName('video')[0];
+      //      video.src = URL.createObjectURL(new Blob([blob]));
+      //      console.log(video)
+      console.log(this.player)
+      //     this.player.recordedData = this.oldvideo
+      //      this.player.recordedData = URL.createObjectURL(new Blob([this.oldvideo]));
+      //      this.player.play()
     }
   },
   beforeDestroy () {

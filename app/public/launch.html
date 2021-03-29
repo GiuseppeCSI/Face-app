@@ -943,9 +943,12 @@
         form.submit();
         */
 
-        let _data = { "patientdata": { "nome": "test", "cognome": "gioppo" } }
-
-        fetch('http://localhost:3000/patientdata?select=id', {
+        // let _data = { "patientdata": { "nome": "test", "cognome": "gioppo" } }
+        let _data = {
+            "patientdata": { "nome": "gioppo", "cf": "gpp", "scheda": { "nome": "Luca", "cognome": "Gioppo", "indirizzo": "csi", "anamnesi": { "allergie": "si", "immunitario": "non_so" }, "allergie_dettaglio": "latte" } }
+        }
+        let host = "192.168.1.134"
+        fetch('http://' + host + ':3000/patientdata?select=id', {
             method: "POST",
             body: JSON.stringify(_data),
             headers: { "Content-type": "application/json; charset=UTF-8", "Prefer": "return=representation" }
@@ -954,17 +957,18 @@
             .then(json => {
                 console.log(json)
                 console.log(json[0].id)
-                window.open('http://158.102.29.31:8080/#' + json[0].id);
+                window.open('http://' + host + ':8080/#' + json[0].id);
             })
             .catch(err => console.log(err));
-
-        var oReq = new XMLHttpRequest();
-        oReq.open("GET", "http://158.102.29.31:8080");
-        oReq.setRequestHeader('ExtraInfo', 28473432894789238473293874329);
-        oReq.send();
-        oReq.onload = function () {
-            //       window.open('http://158.102.29.31:8080');
-        }
+/*
+                        var oReq = new XMLHttpRequest();
+                        oReq.open("GET", "http://158.102.29.31:8080");
+                        oReq.setRequestHeader('ExtraInfo', 28473432894789238473293874329);
+                        oReq.send();
+                        oReq.onload = function () {
+                            //       window.open('http://158.102.29.31:8080');
+                        }
+                        */
 
     </script>
 

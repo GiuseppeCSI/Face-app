@@ -1,38 +1,42 @@
 <template>
   <q-page padding>
-    <vuetable
-      ref="vuetable"
-      api-url="http://192.168.1.134:3000/consent"
-      :fields="fields"
-      data-path=""
-      pagination-path=""
-      :transform="transformData"
-      :query-params="makeQueryParams"
-    >
-      <template
-        slot="actions"
-        scope="props"
-      >
-        <div class="table-button-container">
-          <q-btn
-            class="btn btn-warning btn-sm"
-            color="primary"
-            icon="movie"
-            glossy
-            @click="editRow(props.rowData)"
+    <q-scroll-area style="height: 200px; max-width: 300px;">
+      <div>
+        <vuetable
+          ref="vuetable"
+          api-url="http://158.102.29.31:3000/consent"
+          :fields="fields"
+          data-path=""
+          pagination-path=""
+          :transform="transformData"
+          :query-params="makeQueryParams"
+        >
+          <template
+            slot="actions"
+            scope="props"
           >
-          </q-btn>&nbsp;&nbsp;
-          <q-btn
-            class="btn btn-warning btn-sm"
-            color="primary"
-            glossy
-            icon="picture_as_pdf"
-            @click="downloadPDF(props.rowData)"
-          >
-          </q-btn>
-        </div>
-      </template>
-    </vuetable>
+            <div class="table-button-container">
+              <q-btn
+                class="btn btn-warning btn-sm"
+                color="primary"
+                icon="movie"
+                glossy
+                @click="editRow(props.rowData)"
+              >
+              </q-btn>&nbsp;&nbsp;
+              <q-btn
+                class="btn btn-warning btn-sm"
+                color="primary"
+                glossy
+                icon="picture_as_pdf"
+                @click="downloadPDF(props.rowData)"
+              >
+              </q-btn>
+            </div>
+          </template>
+        </vuetable>
+      </div>
+    </q-scroll-area>
     <q-dialog v-model="alert">
       <q-card>
         <q-card-section>
@@ -40,7 +44,10 @@
         </q-card-section>
 
         <q-card-section class="q-pt-none">
-          <video></video>
+          <video-player
+            :options="videoOptions"
+            ref="videoPlayer"
+          />
         </q-card-section>
 
         <q-card-actions align="right">
@@ -60,14 +67,21 @@
 <script>
 import Vuetable from 'vuetable-2'
 import VideoJSRecord from '../components/VideoJSRecord.vue'
-
+import VideoPlayer from "../components/VideoPlayer.vue";
+//158.102.29.31
+//192.168.1.134
 var URL = window.URL || window.webkitURL;
 var video = document.getElementsByTagName('video')[0];
 
 export default {
   // name: 'PageName',
   components: {
-    Vuetable, VideoJSRecord
+    Vuetable, VideoJSRecord, VideoPlayer
+  },
+  computed: {
+    myplayer () {
+      return this.$refs.videoPlayer
+    }
   },
   methods: {
     transformData (data) {
@@ -101,15 +115,44 @@ export default {
     },
     async editRow (rowData) {
       //alert("You clicked edit on" + JSON.stringify(rowData))
-      this.alert = true
+
       this.currentData = rowData
+      console.log("aperto video")
+      console.log(rowData)
       const base64Response = await fetch(rowData.video);
+      console.log(base64Response)
       const blob = await base64Response.blob();
+      console.log(blob)
       this.currentVideo = blob
+      var URL = window.URL || window.webkitURL;
+
+      this.videoOptions.sources = [
+        {
+          src:
+            URL.createObjectURL(new Blob([blob], { type: "video/x-matroska;codecs=avc1,opus" })),
+          type: blob.type
+        }
+      ]
+      //   console.log(this.myplayer)
+      this.alert = true
+      //      this.myplayer.player.src({ type: blob.type, src: blob })
+      //      this.myplayer.player.load()
+      //    this.myplayer.recordedData = blob
+      //      this.myplayer.player.play()
+      /*
       var URL = window.URL || window.webkitURL;
       var video = document.getElementsByTagName('video')[0];
       video.src = URL.createObjectURL(new Blob([blob]));
+      console.log(video)
       video.play()
+      */
+
+      const downloadLink = document.createElement("a");
+      const fileName = "video.webm";
+      console.log(rowData)
+      downloadLink.href = rowData.video;
+      downloadLink.download = fileName;
+      downloadLink.click();
     },
     downloadPDF (rowData) {
       //  const linkSource = `data:application/pdf;base64,${pdf}`;
@@ -129,6 +172,10 @@ export default {
       alert: false,
       currentData: null,
       currentVideo: null,
+      videoOptions: {
+        autoplay: true,
+        controls: true
+      },
       fields: [
         {
           name: "id",
